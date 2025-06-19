@@ -176,7 +176,7 @@ class SqlLiteDatasource:
 
 
 if __name__ == '__main__':
-    db = SqlLiteDatasource("data/hr.db")
+    db = SqlLiteDatasource("data/test-hr.db")
     db.update_department_distribution()
     
     # Verify the distribution

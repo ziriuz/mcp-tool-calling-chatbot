@@ -439,7 +439,7 @@ if __name__ == "__main__":
     #stdio client with JSON string
     config_json = json.dumps({
         "command": "uvx",
-        "args": ["mcp-server-sqlite", "--db-path", "data/hr.db"],
+        "args": ["mcp-server-sqlite", "--db-path", "data/test-hr.db"],
         "env": {"DEBUG": "1"},
         "encoding": "utf-8"
     })

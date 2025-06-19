@@ -62,7 +62,7 @@ def sql_exec_tool(statement: str) -> Tuple[str, DataFrame]:
     Returns:
         DataFrame with result from execution of SQL
     """
-    db = SqlLiteDatasource("data/hr.db")
+    db = SqlLiteDatasource("data/test-hr.db")
     dataframe = db.retrieve_as_dataframe(statement)
     return dataframe.to_markdown(), dataframe
 

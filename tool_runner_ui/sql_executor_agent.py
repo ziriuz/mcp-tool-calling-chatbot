@@ -168,7 +168,7 @@ if __name__ == '__main__':
 
     chat = Models.create_chat(Models.QWEN25_CODER_7B, temperature=0.5)
 
-    db_retrieval = DatabaseRetrievalTool(SqlLiteDatasource("data/hr.db"),
+    db_retrieval = DatabaseRetrievalTool(SqlLiteDatasource("data/test-hr.db"),
                                          db_description="departments and employees, including salaries",
                                          chat_model=chat)
     response = db_retrieval.invoke("show all departments")

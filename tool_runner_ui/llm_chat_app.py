@@ -81,7 +81,7 @@ def init_session():
             base_url=OLLAMA_BASE_URL,
             temperature=0.3
         )
-        st.session_state.DBAgent = SQLExecutorAgent(SqlLiteDatasource("data/hr.db"), coder_model)
+        st.session_state.DBAgent = SQLExecutorAgent(SqlLiteDatasource("data/test-hr.db"), coder_model)
 
 
 server_params_help = """
@@ -92,7 +92,7 @@ or
 ```json  
 {
 "command": "uvx",  
-"args": ["mcp-server-sqlite", "--db-path", "data/hr.db"],  
+"args": ["mcp-server-sqlite", "--db-path", "data/test-hr.db"],  
 "env": {"DEBUG": "1"},  
 "encoding": "utf-8"
 }  
