@@ -1,0 +1,16 @@
+spring:
+  ai:
+    ollama:
+      base-url: "http://${OLLAMA_HOST}:11434"
+      chat:
+        options:
+          model: qwen2.5-coder:7b
+          #model: qwen3:8b
+          temperature: 0.5
+
+app:
+  httpclient:
+    connect-timeout-sec: 30
+    read-timeout-sec: 300
+
+

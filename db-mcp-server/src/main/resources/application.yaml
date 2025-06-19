@@ -1,0 +1,15 @@
+spring:
+  ai:
+    ollama:
+      base-url: http://localhost:11434
+      chat:
+        options:
+          model: llama3.2:3b
+          temperature: 0.3
+app:
+  httpclient:
+    connect-timeout-sec: 30
+    read-timeout-sec: 300
+  sqlitedb:
+    location: data/test.db
+
