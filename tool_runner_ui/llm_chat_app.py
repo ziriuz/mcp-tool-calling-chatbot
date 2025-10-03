@@ -6,12 +6,11 @@ from datetime import datetime
 import pandas as pd
 import plotly.express as px
 import streamlit as st
-from langgraph.pregel.io import AddableValuesDict
 
 import tools
 from mcp_tool_client import MCPClientFactory
 from logger import Logger
-from llm_chat_agent import LLMChatAgent, ToolConfig, CallAgentTool
+from llm_chat_agent import LLMChatAgent, ToolConfig, CallAgentTool, isinstance_of_LLMChatState
 from models import Models
 from sql_executor_agent import SQLExecutorAgent
 from sqllite_datasource import SqlLiteDatasource
@@ -166,7 +165,7 @@ def build_sidebar():
 
         load_col, save_col = st.columns(2, vertical_alignment="bottom")
         if pkl_files:
-            if load_col.button("Load history", key="load_history_button", use_container_width=True):
+            if load_col.button("Load history", key="load_history_button",  width="stretch"):
                 try:
                     with open(os.path.join("data", selected_file), 'rb') as f:
                         data = pickle.load(f)
@@ -176,7 +175,7 @@ def build_sidebar():
                 except Exception as e:
                     st.error(f"unable to load history file: {e}")
 
-        if save_col.button("Save history", key="save_history_button", use_container_width=True):
+        if save_col.button("Save history", key="save_history_button", width="stretch"):
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             filename = f"data/history-{timestamp}.pkl"
             data = {
@@ -187,7 +186,7 @@ def build_sidebar():
                 pickle.dump(data, f)
             st.rerun()
 
-        if st.button("About", key="about_button", use_container_width=True):
+        if st.button("About", key="about_button",  width="stretch"):
             show_about()
 
 
@@ -224,11 +223,11 @@ def artifacts_widget(artifacts, level: str = ""):
 
         result = artifact.get("result")
 
-        if type(result) is pd.DataFrame:
-            st.dataframe(artifact.get("result"), use_container_width=False)
+        if isinstance(result, pd.DataFrame):
+            st.dataframe(artifact.get("result"), width="content")
             # if st.button("pie chart", key="pie-chart-btn-" + id):
             #     message["draw_pie_chart"] = True
-        elif type(result) is AddableValuesDict:
+        elif isinstance_of_LLMChatState(result):
             if sub_artifacts := result.get("artifacts"):
                 artifacts_widget(sub_artifacts, f"{level}{i}.")
             st.markdown(result['output'])
@@ -256,7 +255,7 @@ def print_assistant_response(message: dict):
     elif llm_response.get('sql'):
         st.markdown(f"```\n\n{llm_response['result']['message']}\n\n```")
         dataframe: pd.DataFrame = llm_response['result']['dataframe']
-        st.dataframe(dataframe, use_container_width=True)
+        st.dataframe(dataframe, width="stretch")
 
         with st.expander("See details"):
             st.write(f"`{llm_response['sql']}`")

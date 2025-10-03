@@ -9,17 +9,15 @@ from mcp import ClientSession, StdioServerParameters, stdio_client
 from mcp.client.sse import sse_client
 from mcp.types import Tool
 
-from llm_chat_agent import ToolConfig, LLMChatAgent
+from llm_chat_agent import ToolConfig
 from logger import Logger
-from models import Models
 
 
 class MCPToolClient(Logger):
 
-    def __init__(self, server_url: str):
-        self.name = 'MCP client'
+    def __init__(self, name: str):
+        self.name = name
         self.color = Logger.BRIGHT_YELLOW
-        self.server_url = server_url
         self.session: ClientSession = None
         self.tools: Dict[str, Any] = {}
         self.toolkit: Dict[str, ToolConfig] = {}
@@ -111,7 +109,6 @@ class MCPToolClient(Logger):
         """Convert an MCP tool to LangChain's tool format.
         Args:
             mcp_tool: The MCP tool to convert.
-            connector: The connector that provides this tool.
 
         Returns:
             A LangChain BaseTool.
@@ -350,7 +347,6 @@ class MCPClientFactory:
 
         Args:
             input_string: Either a URL for SSE client or JSON string for stdio client
-            server_name: Optional server name for JSON configs with multiple servers
 
         Returns:
             MCPToolSSEClient for URLs, MCPToolSTDIOClient for JSON strings
@@ -360,11 +356,11 @@ class MCPClientFactory:
 
         Examples:
             # Create SSE client
-            client = MCPClientFactory.create("http://localhost:8080/sse")
+            client = MCPClientFactory.create_from("http://localhost:8080/sse")
 
             # Create stdio client from simple JSON
             json_config = '{"command": "python", "args": ["server.py"]}'
-            client = MCPClientFactory.create(json_config)
+            client = MCPClientFactory.create_from(json_config)
 
             # Create stdio client from MCP JSON format
             mcp_config = '''
@@ -377,7 +373,7 @@ class MCPClientFactory:
               }
             }
             '''
-            client = MCPClientFactory.create(mcp_config, "github")
+            client = MCPClientFactory.create_from(mcp_config)
         """
 
         if not input_string or not isinstance(input_string, str):
@@ -434,9 +430,10 @@ class MCPClientFactory:
 
 if __name__ == "__main__":
 
-    #mcp_client = MCPToolClient("http://localhost:8080/sse")
+    from llm_chat_agent import LLMChatAgent
+    from models import Models
 
-    #stdio client with JSON string
+    # stdio client with JSON string
     config_json = json.dumps({
         "command": "uvx",
         "args": ["mcp-server-sqlite", "--db-path", "data/test-hr.db"],
@@ -449,7 +446,7 @@ if __name__ == "__main__":
     #     'env': {'BRAVE_API_KEY': '1'}
     # })
 
-    mcp_client = MCPToolSTDIOClient(config_json)
+    mcp_client = MCPClientFactory.create_from(config_json)
 
     #mcp_client = MCPToolSSEClient("http://localhost:8080/sse")
 
@@ -458,6 +455,7 @@ if __name__ == "__main__":
     print(toolkit)
 
     chat_model = Models.create_chat(Models.QWEN3_8B, base_url='http://192.168.68.116:11434')
+    #chat_model = Models.create_chat(Models.LLAMA_1B, base_url='http://localhost:11434')
 
     agent = LLMChatAgent("User Assistant Agent", Logger.BLUE, chat_model, toolkit=toolkit)
 

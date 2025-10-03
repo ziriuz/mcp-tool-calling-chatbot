@@ -21,6 +21,10 @@ class LLMChatState(TypedDict):
     output: str  # STDOUT captured from execution of command
 
 
+def isinstance_of_LLMChatState(obj: dict) -> bool:
+    return isinstance(obj, dict) and all(k in obj for k in LLMChatState.__annotations__)
+
+
 class ToolConfig:
     def __init__(self, callable_tool, direct_response=False, auto_exec=True, is_mcp_tool=False, enabled=True):
         self.function = callable_tool
@@ -31,7 +35,7 @@ class ToolConfig:
 
 
 class LLMChatAgent(Logger):
-    #When User approval is required to run any tool Then ask user for confirmation.
+    # When User approval is required to run any tool Then ask user for confirmation.
     TOOL_CALLING_SYSTEM_MESSAGE = """
     You can use available tools to retrieve additional information or respond directly with your own answer.
     
@@ -127,7 +131,7 @@ class LLMChatAgent(Logger):
         artifacts = state["artifacts"] if state.get("artifacts") else []
         for tool_call in llm_response.tool_calls:
 
-            tool: ToolConfig = self.__toolkit[tool_call["name"]] #.lower()]
+            tool: ToolConfig = self.__toolkit[tool_call["name"]]
             args = ', '.join([f"{k}=`{v}`" for k, v in tool_call['args'].items()])
 
             if tool.auto_exec or state['execute_mode']:
