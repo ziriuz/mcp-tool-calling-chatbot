@@ -138,9 +138,9 @@ class LLMChatAgent(Logger):
                 self.log("Calling {tool_name}({args})", tool_name=tool_call['name'], args=args)
                 # try:
                 # Handle both sync and async tools properly
-                if tool.is_mcp_tool or hasattr(tool.function, 'ainvoke'):
+                if tool.is_mcp_tool and hasattr(tool.function, 'ainvoke'):
                     # For MCP tools, create a new event loop
-                    loop = asyncio.ProactorEventLoop()
+                    loop = asyncio.new_event_loop()
                     asyncio.set_event_loop(loop)
                     try:
                         tool_msg = loop.run_until_complete(tool.function.ainvoke(tool_call))

@@ -17,17 +17,14 @@ class Models(Enum):
     QWEN3_8B = "qwen3:8b"
     MISTRAL_NEMO = "mistral-nemo:latest"
     MISTRAL = "mistral"
+    GPT_OSS = "gpt-oss:20b-cloud"
 
     @staticmethod
     def create_chat(model: Enum, base_url: str = "http://localhost:11434", temperature: float = 0.05):
         if model == Models.GPT_4O_MINI:
             return ChatOpenAI(model=model.value, temperature=temperature, http_client=httpx.Client(verify=False))
         else:
-            return ChatOllama(model=model.value, temperature=temperature,
-                              base_url=base_url,
-                              http_client=httpx.Client(verify=False),
-                              timeout=httpx.Timeout(timeout=300.0)
-                              )
+            return ChatOllama(model=model.value, temperature=temperature, base_url=base_url)
 
 
 if __name__ == "__main__":

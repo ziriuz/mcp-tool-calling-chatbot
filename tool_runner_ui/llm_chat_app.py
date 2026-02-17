@@ -26,14 +26,10 @@ Call this whenever you need information about: departments and employees, includ
 """
 
 
-def create_agent(model: Models):
+def create_agents(coder_model_name: Models, chat_model_name: Models):
 
-    coder_model = Models.create_chat(
-        Models(st.secrets.get("CODER_MODEL")) or DEFAULT_CODER_MODEL,
-        base_url=OLLAMA_BASE_URL,
-        temperature=0.3
-    )
-    chat_model = Models.create_chat(model, base_url=OLLAMA_BASE_URL, temperature=0.1)
+    chat_model = Models.create_chat(chat_model_name, base_url=OLLAMA_BASE_URL, temperature=0.1)
+    coder_model = Models.create_chat(coder_model_name, base_url=OLLAMA_BASE_URL, temperature=0.3)
 
     db_agent = LLMChatAgent(
         "DB Retrieval Agent", Logger.GREEN, coder_model,
@@ -58,7 +54,7 @@ def create_agent(model: Models):
         "command_exec_tool": ToolConfig(tools.command_exec_tool, False, False)
     }
 
-    return LLMChatAgent("User Assistant Agent", Logger.BLUE, chat_model, toolkit=toolkit)
+    return db_agent, LLMChatAgent("User Assistant Agent", Logger.BLUE, chat_model, toolkit=toolkit)
 
 
 def init_session():
@@ -70,16 +66,17 @@ def init_session():
             Models.QWEN25_CODER_7B.value,
             Models.QWEN3_8B.value,
             Models.MISTRAL.value,
-            Models.GPT_4O_MINI.value
+            Models.GPT_4O_MINI.value,
+            Models.GPT_OSS.value
         )
-        st.session_state.assistant = create_agent(
+        coder_model_name = Models(st.secrets.get("CODER_MODEL")) or DEFAULT_CODER_MODEL
+
+        st.session_state.coder, st.session_state.assistant = create_agents(
+            coder_model_name,
             Models(st.secrets.get("AGENT_MODEL")) or DEFAULT_AGENT_MODEL
         )
-        coder_model = Models.create_chat(
-            Models(st.secrets.get("CODER_MODEL")) or DEFAULT_CODER_MODEL,
-            base_url=OLLAMA_BASE_URL,
-            temperature=0.3
-        )
+
+        coder_model = Models.create_chat(coder_model_name, base_url=OLLAMA_BASE_URL, temperature=0.3)
         st.session_state.DBAgent = SQLExecutorAgent(SqlLiteDatasource("data/test-hr.db"), coder_model)
 
 
@@ -104,13 +101,24 @@ def build_sidebar():
         st.title("Chat-Driven Tool Runner")
 
         option = st.selectbox(
-            "Model:",
+            "Agent Model:",
             st.session_state.models,
             index=st.session_state.models.index(st.session_state.assistant.get_llm_name())
         )
 
         if option != st.session_state.assistant.get_llm_name():
-            st.session_state.assistant.set_model(Models.create_chat(Models(option), base_url=OLLAMA_BASE_URL, temperature=0.3))
+            st.session_state.assistant.set_model(Models.create_chat(Models(option), base_url=OLLAMA_BASE_URL, temperature=0.1))
+
+        coder_option = st.selectbox(
+            "Coder Model:",
+            st.session_state.models,
+            index=st.session_state.models.index(st.session_state.coder.get_llm_name())
+        )
+
+        if coder_option != st.session_state.coder.get_llm_name():
+            model = Models.create_chat(Models(coder_option), base_url=OLLAMA_BASE_URL, temperature=0.3)
+            st.session_state.coder.set_model(model)
+            st.session_state.DBAgent = SQLExecutorAgent(SqlLiteDatasource("data/test-hr.db"), model)
 
         if st.toggle("Lang Chain graph"):
             st.image(st.session_state.assistant.get_graph_image())
@@ -132,7 +140,9 @@ def build_sidebar():
                         mcp_client = MCPClientFactory.create_from(server_params)
 
                         try:
-                            loop = asyncio.ProactorEventLoop()
+                            # Use platform-agnostic event loop creation
+                            # On Windows, this creates ProactorEventLoop; on Unix, the default event loop
+                            loop = asyncio.new_event_loop()
                             asyncio.set_event_loop(loop)
                             mcp_toolkit = loop.run_until_complete(mcp_client.get_toolkit())
                         finally:
